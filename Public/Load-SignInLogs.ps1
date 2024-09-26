@@ -20,16 +20,30 @@ function Load-SignInLogs {
                 TrustType      = $element.GetProperty("deviceDetail").GetProperty("trustType").GetString()
             }
 
+            $status = [PSCustomObject]@{
+                ErrorCode         = $element.GetProperty("status").GetProperty("errorCode").GetInt32()
+                FailureReason     = $element.GetProperty("status").GetProperty("failureReason").GetString()
+                # AdditionalDetails = $element.GetProperty("status").GetProperty("additionalDetails").GetString() #returns a get string error possibly due to some being null and some having special characters like like continuation
+            }
+
+            $location = [PSCustomObject]@{
+                City            = $element.GetProperty("location").GetProperty("city").GetString()
+                State           = $element.GetProperty("location").GetProperty("state").GetString()
+                CountryOrRegion = $element.GetProperty("location").GetProperty("countryOrRegion").GetString()
+            }
+
             $signInLog = [PSCustomObject]@{
                 UserDisplayName = $element.GetProperty("userDisplayName").GetString()
                 UserId          = $element.GetProperty("userId").GetString()
                 DeviceDetail    = $deviceDetail
+                Status          = $status  # Include the status object in the sign-in log
+                Location        = $location # Include the location object in the sign-in log
             }
 
             $signInLogs.Add($signInLog)
         }
 
-        Write-EnhancedLog -Message "Sign-in logs loaded successfully from $JsonFilePath." -Level "INFO" -ForegroundColor ([ConsoleColor]::Green)
+        Write-EnhancedLog -Message "Sign-in logs loaded successfully from $JsonFilePath." -Level "INFO"
     } catch {
         Handle-Error -ErrorRecord $_
     } finally {
@@ -38,9 +52,3 @@ function Load-SignInLogs {
 
     return $signInLogs
 }
-
-# # Example usage
-# $jsonFilePath = "path_to_your_json_file.json"
-# $signInLogs = Load-SignInLogs -JsonFilePath $jsonFilePath
-# Write-Output "Sign-In Logs: $($signInLogs | Format-Table -AutoSize)"
-

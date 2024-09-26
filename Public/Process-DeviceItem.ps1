@@ -16,6 +16,23 @@ function Process-DeviceItem {
     }
 
     Process {
+        # Ensure ErrorCode is properly accessed
+        $errorCode = $Item.Status.ErrorCode
+        $failureReason = $Item.Status.FailureReason
+
+        # Wait-Debugger
+
+        if ($null -eq $errorCode) {
+            Write-EnhancedLog -Message "Missing ErrorCode in the sign-in log for user $($Item.userDisplayName). Skipping this item." -Level "WARNING"
+            return
+        }
+
+        # Check if sign-in was successful
+        if ($errorCode -ne 0) {
+            Write-EnhancedLog -Message "Sign-in attempt failed for user $($Item.userDisplayName) with ErrorCode: $errorCode - $failureReason" -Level "WARNING"
+            return
+        }
+
         # Ensure deviceDetail object and properties exist
         if (-not $Item.deviceDetail) {
             Write-EnhancedLog -Message "Missing deviceDetail for user: $($Item.userDisplayName)" -Level "WARNING"
@@ -35,7 +52,8 @@ function Process-DeviceItem {
             # Construct uniqueId based on availability of deviceId and OS for BYOD
             if ([string]::IsNullOrWhiteSpace($deviceId)) {
                 $uniqueId = "$userId-$os".ToLowerInvariant()
-            } else {
+            }
+            else {
                 $uniqueId = $deviceId.ToLowerInvariant()
             }
 
@@ -70,7 +88,11 @@ function Process-DeviceItem {
 
                 Add-Result -Context $Context -Item $Item -DeviceId $deviceId -DeviceState $deviceState -HasPremiumLicense $hasPremiumLicense -OSVersion $osVersion
             }
-        } catch {
+            else {
+                Write-EnhancedLog -Message "Device ID $uniqueId for user $($Item.userDisplayName) has already been processed and will be skipped." -Level "WARNING"
+            }
+        }
+        catch {
             Write-EnhancedLog -Message "An error occurred while processing the device item for user: $($Item.userDisplayName) - $_" -Level "ERROR"
             Handle-Error -ErrorRecord $_
         }

@@ -7,20 +7,25 @@ function Process-SignInLogs {
     )
 
     # Ensure the signInLogs variable is not null before using it
-    if ($null -eq $signInLogs -or $signInLogs.Count -eq 0) {
+    if ($null -eq $signInLogs -or @($signInLogs).Count -eq 0) {
         Write-Warning "No sign-in logs were loaded."
         exit 1
     }
-
-    # Display the count of loaded sign-in logs
-    Write-Host "Loaded $($signInLogs.Count) sign-in logs."
+    else {
+        Write-Host "Loaded $(@($signInLogs).Count) sign-in logs."
+    }
 
     # Debugging: Print the first sign-in log entry
     if ($signInLogs.Count -gt 0) {
         $firstSignInLog = $signInLogs[0]
+        
+        # Determine the sign-in status based on the ErrorCode
+        $signInStatus = if ($firstSignInLog.Status.ErrorCode -eq 0) { "Success" } else { "Failure" }
+    
         Write-Host "First sign-in log entry:"
         Write-Host "UserDisplayName: $($firstSignInLog.UserDisplayName)"
         Write-Host "UserId: $($firstSignInLog.UserId)"
+        Write-Host "SignInStatus: $signInStatus"  # Print the sign-in status
         Write-Host "DeviceDetail:"
         Write-Host "  DeviceId: $($firstSignInLog.DeviceDetail.DeviceId)"
         Write-Host "  DisplayName: $($firstSignInLog.DeviceDetail.DisplayName)"
@@ -28,6 +33,7 @@ function Process-SignInLogs {
         Write-Host "  IsCompliant: $($firstSignInLog.DeviceDetail.IsCompliant)"
         Write-Host "  TrustType: $($firstSignInLog.DeviceDetail.TrustType)"
     }
+    
 
     $context = New-ProcessingContext
 
@@ -37,7 +43,8 @@ function Process-SignInLogs {
         if ($log.UserDisplayName -ne "On-Premises Directory Synchronization Service Account" -and $null -ne $log) {
             try {
                 Process-DeviceItem -Item $log -Context $context -Headers $Headers
-            } catch {
+            }
+            catch {
                 Write-Error "Error processing item: $($_.Exception.Message)"
                 Handle-Error -ErrorRecord $_
             }

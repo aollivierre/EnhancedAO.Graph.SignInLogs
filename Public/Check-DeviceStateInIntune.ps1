@@ -22,10 +22,10 @@ function Check-DeviceStateInIntune {
         return "Absent"
     }
 
-    Write-EnhancedLog -Message "Checking device state in Intune for Entra Device ID: $EntraDeviceId for username: $Username" -ForegroundColor Cyan
+    Write-EnhancedLog -Message "Checking device state in Intune for Entra Device ID: $EntraDeviceId for username: $Username" -Level 'INFO'
 
     $graphApiUrl = "https://graph.microsoft.com/v1.0/deviceManagement/managedDevices?`$filter=azureADDeviceId eq '$EntraDeviceId'"
-    Write-EnhancedLog -Message "Constructed Graph API URL: $graphApiUrl"
+    Write-EnhancedLog -Message "Constructed Graph API URL: $graphApiUrl" -Level 'INFO'
 
     $httpClient = Initialize-HttpClient -Headers $Headers
 
@@ -37,14 +37,14 @@ function Check-DeviceStateInIntune {
             $valueProperty = $responseJson.RootElement.GetProperty("value")
 
             if ($valueProperty.GetArrayLength() -gt 0) {
-                Write-EnhancedLog -Message "Device is present in Intune." -ForegroundColor Green
+                Write-EnhancedLog -Message "Device is present in Intune." -Level 'INFO'
                 return "Present"
             } else {
-                Write-EnhancedLog -Message "Device is absent in Intune." -ForegroundColor Yellow
+                Write-EnhancedLog -Message "Device is absent in Intune." -Level 'WARNING'
                 return "Absent"
             }
         } else {
-            Write-EnhancedLog -Message "Received empty response from Intune API." -ForegroundColor Yellow
+            Write-EnhancedLog -Message "Received empty response from Intune API." -Level 'WARNING'
             return "NoData"
         }
     } catch {

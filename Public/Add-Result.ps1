@@ -1,3 +1,4 @@
+
 # Function to add results to the context
 function Add-Result {
     param (
@@ -27,8 +28,11 @@ function Add-Result {
         # Determine the user license
         $userLicense = if ($HasPremiumLicense) { "Microsoft 365 Business Premium" } else { "Other" }
 
-        # Create a new Result object
-        $splatNewResult = @{
+        # Determine the sign-in status based on the error code
+        $signInStatus = if ($Item.Status.ErrorCode -eq 0) { "Success" } else { "Failure" }
+
+        # Create the result object directly
+        $result = [PSCustomObject]@{
             DeviceName             = $deviceName
             UserName               = $Item.UserDisplayName
             DeviceEntraID          = $DeviceId
@@ -39,15 +43,16 @@ function Add-Result {
             DeviceStateInIntune    = $DeviceState
             TrustType              = $Item.DeviceDetail.TrustType
             UserLicense            = $userLicense
-
+            SignInStatus           = $signInStatus   # New property for Sign-In Status
+            City                   = $Item.Location.City  # New property for City
+            State                  = $Item.Location.State # New property for State
+            CountryOrRegion        = $Item.Location.CountryOrRegion # New property for Country/Region
         }
-        
-        $result = New-Result @splatNewResult
         
         # Add the result to the context
         $Context.Results.Add($result)
 
-        Write-EnhancedLog -Message "Successfully added result for device: $deviceName for user: $($Item.UserDisplayName)" -Level "INFO"
+        Write-EnhancedLog -Message "Successfully added result for device: $deviceName for user: $($Item.UserDisplayName) with status: $signInStatus" -Level "INFO"
     }
     catch {
         Handle-Error -ErrorRecord $_
