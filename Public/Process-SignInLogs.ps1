@@ -43,6 +43,7 @@ function Process-SignInLogs {
         if ($log.UserDisplayName -ne "On-Premises Directory Synchronization Service Account" -and $null -ne $log) {
             try {
                 Process-DeviceItem -Item $log -Context $context -Headers $Headers
+                # Process-DeviceItem -Item $log -Headers $Headers
             }
             catch {
                 Write-Error "Error processing item: $($_.Exception.Message)"
@@ -50,6 +51,70 @@ function Process-SignInLogs {
             }
         }
     }
+
+
+    # Stop the logging job when done
+    Stop-Job -Job $global:LogJob
+    Remove-Job -Job $global:LogJob
+
+
+
+
+
+    # $jobs = @()
+
+    # foreach ($log in $signInLogs) {
+    #     # Exclude "On-Premises Directory Synchronization Service Account" user
+    #     if ($log.UserDisplayName -ne "On-Premises Directory Synchronization Service Account" -and $null -ne $log) {
+    #         $jobs += Start-Job -ScriptBlock {
+    #             param ($log, $context, $headers)
+            
+    #             try {
+    #                 Process-DeviceItem -Item $log -Context $context -Headers $headers
+    #             }
+    #             catch {
+    #                 Write-Error "Error processing item: $($_.Exception.Message)"
+    #                 Handle-Error -ErrorRecord $_
+    #             }
+    #         } -ArgumentList $log, $context, $Headers
+    #     }
+    # }
+
+    # # Wait for all jobs to complete
+    # $jobs | ForEach-Object {
+    #     $_ | Wait-Job
+    # }
+
+    # # Retrieve job results
+    # $jobs | ForEach-Object {
+    #     Receive-Job -Job $_
+    #     Remove-Job -Job $_
+    # }
+
+
+
+
+
+    # $signInLogs | ForEach-Object -Parallel {
+    #     param (
+    #         $log,
+    #         $context,
+    #         $headers
+    #     )
+    
+    #     # Exclude "On-Premises Directory Synchronization Service Account" user
+    #     if ($log.UserDisplayName -ne "On-Premises Directory Synchronization Service Account" -and $null -ne $log) {
+    #         try {
+    #             Process-DeviceItem -Item $log -Context $context -Headers $headers
+    #         }
+    #         catch {
+    #             Write-Error "Error processing item: $($_.Exception.Message)"
+    #             Handle-Error -ErrorRecord $_
+    #         }
+    #     }
+    # } -ArgumentList $_, $using:context, $using:headers -ThrottleLimit 10
+    
+
 
     # Remove null entries from the results list
     $context.Results = $context.Results | Where-Object { $_ -ne $null }
