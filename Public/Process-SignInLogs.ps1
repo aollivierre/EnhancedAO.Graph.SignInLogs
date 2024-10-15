@@ -53,9 +53,9 @@ function Process-SignInLogs {
     }
 
 
-    # Stop the logging job when done
-    Stop-Job -Job $global:LogJob
-    Remove-Job -Job $global:LogJob
+    # # Stop the logging job when done
+    # Stop-Job -Job $global:LogJob
+    # Remove-Job -Job $global:LogJob
 
 
 
